@@ -110,3 +110,4 @@ Thumbs.db
 *.temp
 .git_backup/
 .git.backup*/
+keystore.properties

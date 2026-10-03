@@ -29,7 +29,7 @@ fun keystoreProp(key: String): String = keystoreProperties[key] as? String
     )
 
 android {
-    namespace = "com.flowpay.app"
+    namespace = "vijayaapardhu.dev.fastpay"
     compileSdk = 35
     // Pinned, not "whatever AGP resolves": aapt2 and zipalign differ between
     // build-tools revisions, so leaving this floating makes the reproducible
@@ -37,14 +37,19 @@ android {
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
-        applicationId = "com.flowpay.app"
+        applicationId = "vijayaapardhu.dev.fastpay"
         minSdk = 29
         targetSdk = 35
         // versionCode is monotonic and independent of versionName: builds with
         // code 4 exist on test hardware, and Android refuses downgrades, so
         // this only ever goes up even though the public name restarts at 1.0.0.
-        versionCode = 6
-        versionName = "1.0.1"
+        //
+        // Both are overridable with -PversionCode= / -PversionName= so the
+        // release workflow can stamp a tag without editing this file. The
+        // defaults are what a plain `./gradlew assembleDebug` produces, so
+        // local builds are unaffected by the automation.
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 6
+        versionName = project.findProperty("versionName") as String? ?: "1.0.1"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -63,6 +68,17 @@ android {
                 keyAlias = keystoreProp("keyAlias")
                 keyPassword = keystoreProp("keyPassword")
             }
+            // Signing schemes are left at AGP's defaults deliberately:
+            // v1 auto-disables (minSdk 29), v2 signs, v3 is off.
+            //
+            // v3 would enable signing-key rotation, and is tempting to turn on
+            // now because it cannot be added retroactively without a reinstall.
+            // It is deliberately NOT enabled here anyway: turning v3 on makes
+            // AGP drop v2, and this commit is already changing the application
+            // ID, the name and the icon. Shipping an unfamiliar signing scheme
+            // alongside that, to an audience that sideloads APKs, is two
+            // unknowns at once for a benefit that can wait. If key rotation is
+            // wanted later, do it as its own deliberate change.
         }
     }
 
@@ -174,11 +190,11 @@ kover {
         filters {
             includes {
                 packages(
-                    "com.flowpay.app.payment",
-                    "com.flowpay.app.payment.sms",
-                    "com.flowpay.app.telephony"
+                    "vijayaapardhu.dev.fastpay.payment",
+                    "vijayaapardhu.dev.fastpay.payment.sms",
+                    "vijayaapardhu.dev.fastpay.telephony"
                 )
-                classes("com.flowpay.app.helpers.TransactionDetector*")
+                classes("vijayaapardhu.dev.fastpay.helpers.TransactionDetector*")
             }
         }
         verify {

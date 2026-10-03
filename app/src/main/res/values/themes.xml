@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.Flowpay" parent="android:Theme.Black">
+    <style name="Base.Theme.Fastpay" parent="android:Theme.Black">
         <!-- Customize your dark theme here. -->
         <item name="android:statusBarColor">#FF000000</item>
         <item name="android:windowLightStatusBar">false</item>
@@ -10,7 +10,7 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
-    <style name="Theme.Flowpay" parent="Base.Theme.Flowpay">
+    <style name="Theme.Fastpay" parent="Base.Theme.Fastpay">
         <!-- Complete blue/white blocking - no blue or white anywhere -->
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>
@@ -31,8 +31,48 @@
         <item name="android:windowActionBar">false</item>
     </style>
 
+    <!-- Light counterpart of Theme.Fastpay. Applied at onCreate (before
+         setContent) when the saved scheme resolves to light, so the window
+         background is already the light surface on the first frame rather
+         than fading up from black. -->
+    <style name="Theme.Fastpay.Light" parent="Base.Theme.Fastpay">
+        <item name="android:windowBackground">@color/window_background_light</item>
+        <item name="android:colorBackground">@color/window_background_light</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <!-- Dark icons on a light bar; inverted again in FastpayTheme's
+             SideEffect for the scheme actually in scope. -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:statusBarColor">@color/window_background_light</item>
+        <item name="android:navigationBarColor">@color/window_background_light</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">shortEdges</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
+    <!-- Light counterpart of the launch theme, for the same reason. -->
+    <style name="Theme.Fastpay.Splash.Light" parent="android:Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/window_background_light</item>
+        <item name="android:colorBackground">@color/window_background_light</item>
+        <item name="android:statusBarColor">@color/window_background_light</item>
+        <item name="android:navigationBarColor">@color/window_background_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
     <!-- Completely black splash screen theme -->
-    <style name="Theme.Flowpay.Splash" parent="android:Theme.Black">
+    <style name="Theme.Fastpay.Splash" parent="android:Theme.Black">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>
         <item name="android:statusBarColor">#FF000000</item>
@@ -44,10 +84,10 @@
         <item name="android:enforceNavigationBarContrast">false</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
-        <!-- NO fitsSystemWindows here, for the same reason Theme.Flowpay omits
+        <!-- NO fitsSystemWindows here, for the same reason Theme.Fastpay omits
              it. This is MainActivity's *launch* theme (see AndroidManifest), so
              it is what establishes the DecorView's inset behaviour before
-             onCreate runs — setTheme(Theme_Flowpay) in onCreate cannot undo it
+             onCreate runs — setTheme(Theme_Fastpay) in onCreate cannot undo it
              afterwards. Leaving it true made the decor pad the content while
              Compose's statusBarsPadding()/navigationBarsPadding() padded it a
              second time: a black band under the status bar and content clipped

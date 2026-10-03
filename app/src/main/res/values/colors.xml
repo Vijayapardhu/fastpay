@@ -2,7 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="flowpay_green">#FF4CAF50</color>
+    <color name="fastpay_green">#FF4CAF50</color>
     
     <!-- Setup Screen Colors -->
     <color name="setup_text_secondary">#FF888888</color>
@@ -37,4 +37,12 @@
     <color name="overlay_alert_red">#FFFF6B6B</color>
     <!-- Backing for the QR scanner's inline "not a valid UPI QR" banner -->
     <color name="scan_error_banner_bg">#F21A1113</color>
+
+    <!-- Window-level colours. These exist so the Activity window matches the
+         Compose scheme BEFORE the first frame draws. Without them the app
+         opened on a black window and faded to the light surface, which reads
+         as a flash. Mirrors DarkFastpayColors/LightFastpayColors in
+         ui/theme/Color.kt - keep the two in step. -->
+    <color name="window_background_dark">#FF08080C</color>
+    <color name="window_background_light">#FFF4F5F9</color>
 </resources>

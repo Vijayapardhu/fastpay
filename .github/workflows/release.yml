@@ -1,0 +1,318 @@
+name: Release
+
+# Tagged releases only. Nothing here runs on an ordinary push — build.yml owns
+# CI. This workflow's single job is "a human tagged a version and asked for it
+# to be published", so it is deliberately the slowest and most heavily gated
+# path in the repo.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)publish, e.g. v1.0.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+# Two releases of the same tag racing would publish whichever finished last.
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, verify and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # ── Gate 1: signing material ──────────────────────────────────────────
+      #
+      # There is deliberately no "unsigned release" path. An unsigned APK
+      # cannot be installed, so publishing one would be worse than publishing
+      # nothing — and silently uploading an uninstallable file under a release
+      # tag is exactly the kind of thing that gets discovered by a user. Fail
+      # here, early, with instructions.
+      #
+      # The keystore is base64-encoded in a secret rather than committed, and is
+      # decoded into RUNNER_TEMP so it never lands in the workspace.
+      - name: Check signing secrets are configured
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.FASTPAY_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.FASTPAY_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.FASTPAY_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.FASTPAY_KEY_PASSWORD }}
+        run: |
+          missing=()
+          [ -n "$KEYSTORE_B64" ]   || missing+=("FASTPAY_KEYSTORE_BASE64")
+          [ -n "$STORE_PASSWORD" ] || missing+=("FASTPAY_KEYSTORE_PASSWORD")
+          [ -n "$KEY_ALIAS" ]     || missing+=("FASTPAY_KEY_ALIAS")
+          [ -n "$KEY_PASSWORD" ]  || missing+=("FASTPAY_KEY_PASSWORD")
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::Missing repository secret(s): ${missing[*]}"
+            echo "Add them under Settings -> Secrets and variables -> Actions."
+            echo "Generate a keystore with:"
+            echo "  keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias fastpay"
+            echo "then base64 it: base64 -w0 release.jks"
+            exit 1
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      # ── Gate 2: the tag ──────────────────────────────────────────────────
+      #
+      # versionName/versionCode are derived from the tag, so the tag is parsed
+      # here — strictly, and before anything is built from it. A tag is
+      # attacker-influenceable by anyone who can push a branch, so it is
+      # validated rather than trusted, and never interpolated into a run
+      # block as raw text.
+      - name: Derive version from tag
+        id: version
+        env:
+          TAG_INPUT: ${{ github.event.inputs.tag }}
+          TAG_REF: ${{ github.ref_name }}
+        run: |
+          tag="${TAG_INPUT:-$TAG_REF}"
+          if [[ ! "$tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$tag' is not vMAJOR.MINOR.PATCH[-PRERELEASE]. Refusing to build."
+            exit 1
+          fi
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          patch="${BASH_REMATCH[3]}"
+          pre="${BASH_REMATCH[4]}"
+
+          # Monotonic, and orders correctly against Android's own comparison:
+          # 1.2.10 must be > 1.2.9, which a plain concatenation would get
+          # backwards. The per-component ceiling is checked so the scheme
+          # cannot silently overflow into the next component's range.
+          for c in "$major" "$minor" "$patch"; do
+            if [ "$c" -gt 999 ]; then
+              echo "::error::Version component '$c' exceeds 999; versionCode scheme would collide."
+              exit 1
+            fi
+          done
+          code=$(( major * 1000000 + minor * 1000 + patch ))
+
+          {
+            echo "tag=$tag"
+            echo "name=$major.$minor.$patch"
+            echo "code=$code"
+            # A leading '-' in versionName is an invalid semver pre-release and
+            # Play rejects it; store the hyphen so it round-trips.
+            echo "suffix=$pre"
+            # A pre-release tag must not become the newest stable tag.
+            echo "prerelease=$([ -n "$pre" ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+          echo "Building $tag -> versionName $major.$minor.$patch$pre, versionCode $code"
+
+      # ── Gate 3: the build must still be green ────────────────────────────
+      #
+      # A release is the one artefact a user installs without building it, so
+      # it must not be publishable from a commit that CI would reject. These
+      # are the same tasks build.yml runs.
+      - name: Verify the tree is releasable
+        run: ./gradlew test detekt :app:lintDebug koverVerify --no-daemon --stacktrace
+
+      # ── Signing material ─────────────────────────────────────────────────
+      #
+      # The keystore is base64 in a secret and is decoded into RUNNER_TEMP, so
+      # it never lands in the workspace or the git index.
+      #
+      # keystore.properties is written from scratch rather than by editing
+      # keystore.properties.example: the build's own `keystoreProp()` helper
+      # throws naming the exact missing key, which is a better guard than a
+      # template diff would be.
+      - name: Materialise keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.FASTPAY_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.FASTPAY_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.FASTPAY_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.FASTPAY_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          chmod 600 "$RUNNER_TEMP/release.jks"
+
+          jks_path="$(cygpath -m "$RUNNER_TEMP/release.jks" 2>/dev/null || echo "$RUNNER_TEMP/release.jks")"
+          {
+            printf 'storeFile=%s\n' "$jks_path"
+            printf 'storePassword=%s\n' "$STORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+          } > keystore.properties
+
+          # Fail here rather than letting Gradle half-read the file.
+          for key in storeFile storePassword keyAlias keyPassword; do
+            if ! grep -qE "^${key}=.+" keystore.properties; then
+              echo "::error::keystore.properties is missing a value for '$key'."
+              exit 1
+            fi
+          done
+
+      # ── Build ────────────────────────────────────────────────────────────
+      #
+      # No -PallowUnsigned here on purpose: build.gradle.kts refuses to
+      # package an unsigned release, and that guard is left armed rather than
+      # bypassed.
+      - name: Assemble release APK
+        run: |
+          ./gradlew assembleRelease --no-daemon --stacktrace \
+            -PversionName="${{ steps.version.outputs.name }}${{ steps.version.outputs.suffix }}" \
+            -PversionCode="${{ steps.version.outputs.code }}"
+
+      - name: Locate and size-gate the APK
+        id: apk
+        run: |
+          apk="$(ls app/build/outputs/apk/release/*.apk 2>/dev/null | head -1)"
+          if [ -z "$apk" ]; then
+            echo "::error::No release APK was produced."
+            exit 1
+          fi
+          cp "$apk" "$RUNNER_TEMP/fastpay.apk"
+
+          bytes=$(stat -c%s "$RUNNER_TEMP/fastpay.apk")
+          echo "Release APK: $((bytes / 1024 / 1024)) MB ($bytes bytes)"
+
+          # The same ratchet build.yml enforces, and for the same reason: this
+          # app's audience is on metered data and entry-level hardware, so
+          # install size is a product requirement rather than a nicety. Kept in
+          # sync deliberately — raise it by shrinking the APK, not by relaxing
+          # the gate.
+          budget=18874368 # 18 MB
+          if [ "$bytes" -gt "$budget" ]; then
+            echo "::error::Release APK exceeded the 18 MB budget. Shrink it instead of raising the ceiling."
+            exit 1
+          fi
+          echo "path=$RUNNER_TEMP/fastpay.apk" >> "$GITHUB_OUTPUT"
+          echo "bytes=$bytes" >> "$GITHUB_OUTPUT"
+
+      # ── Gate 4: the APK is what it claims to be ──────────────────────────
+      #
+      # An APK that did not sign, or that reports a different applicationId
+      # than the one in this repo's build file, is not the artefact these
+      # release notes describe. Both are checked before publication.
+      - name: Verify signature and identity
+        run: |
+          set -euo pipefail
+          build_tools="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          apksigner="$build_tools/apksigner"
+          aapt2="$build_tools/aapt2"
+
+          if [ ! -x "$apksigner" ]; then
+            echo "::error::apksigner not found under $build_tools"
+            exit 1
+          fi
+
+          "$apksigner" verify --verbose --print-certs "$RUNNER_TEMP/fastpay.apk"
+
+          echo "::group::Identity"
+          "$aapt2" dump badging "$RUNNER_TEMP/fastpay.apk" \
+            | grep -E "^(package|application-label)" | head -5
+          echo "::endgroup::"
+
+          expected="vijayaapardhu.dev.fastpay"
+          actual="$("$aapt2" dump badging "$RUNNER_TEMP/fastpay.apk" \
+            | sed -n "s/^package: name='\([^']*\)'.*/\1/p")"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::applicationId is '$actual', expected '$expected'."
+            exit 1
+          fi
+
+      - name: Checksum
+        id: sums
+        run: |
+          cd "$RUNNER_TEMP"
+          sha256sum fastpay.apk > "fastpay-${{ steps.version.outputs.tag }}.sha256"
+          cat "fastpay-${{ steps.version.outputs.tag }}.sha256"
+
+      # ── Publish ──────────────────────────────────────────────────────────
+      - name: Upload release assets
+        uses: softprops/action-gh-release@da4b3b6f57d8eb2e97e4b0d0e0eb1ce7ce0f3cd # v2
+        with:
+          name: "Fastpay ${{ steps.version.outputs.name }}${{ steps.version.outputs.suffix }}"
+          tag_name: "${{ steps.version.outputs.tag }}"
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          draft: false
+          fail_on_unmatched_files: true
+          files: |
+            ${{ runner.temp }}/fastpay.apk
+            ${{ runner.temp }}/fastpay-${{ steps.version.outputs.tag }}.sha256
+          body: |
+            ## Fastpay ${{ steps.version.outputs.name }}${{ steps.version.outputs.suffix }}
+
+            Offline UPI payments over `*99#` USSD and the UPI 123Pay IVR — no
+            internet required.
+
+            | | |
+            | --- | --- |
+            | Application ID | `vijayaapardhu.dev.fastpay` |
+            | versionCode | `${{ steps.version.outputs.code }}` |
+            | Min SDK | 29 (Android 10) |
+            | Size | ${{ steps.apk.outputs.bytes }} bytes |
+            | Signed | yes — verify with the `.sha256` |
+
+            ### Install
+
+            Install `fastpay.apk` directly, or:
+
+            ```bash
+            adb install -r fastpay.apk
+            ```
+
+            Android may ask you to allow installs from your browser/file manager;
+            that is expected for a sideloaded APK.
+
+            ### Verify the download
+
+            ```bash
+            sha256sum -c fastpay-${{ steps.version.outputs.tag }}.sha256
+            ```
+
+            ### Upgrades
+
+            `versionCode` is monotonic, so installing a newer release over an
+            older one works normally. Downgrading is not possible — Android
+            refuses it — which is why the code only ever increases.
+
+            > **Attribution.** Fastpay is a fork of
+            > [Flowpayup/Payments-Without-Internet](https://github.com/Flowpayup/Payments-Without-Internet),
+            > Apache-2.0. Upstream copyright, LICENSE and NOTICE are retained.
+            >
+            > Only **signed release** APKs are published here. The debug build is
+            > `android:debuggable=true`, ships an exported SMS-injection receiver
+            > and is signed with the public Android debug key — publishing it would
+            > let anyone ship a trojan that upgrades this app in place.
+
+            ## Verification performed
+
+            - `test` — unit tests (bank-SMS parsing, payment lifecycle, window/dedup)
+            - `detekt` — static analysis, incl. the palette and copy gates
+            - `:app:lintDebug` — Android lint against a frozen baseline
+            - `koverVerify` — coverage floor on the payment core
+            - Release APK size gate (18 MB)
+            - `apksigner verify` and `aapt2 dump badging` on the published artefact
+
+            ## Full changelog
+
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ steps.version.outputs.tag }}/CHANGELOG.md).

@@ -1,4 +1,4 @@
-# Flowpay - Payments Without Internet
+# Fastpay - Payments Without Internet
 
 *An Android app that brings UPI payments to users with no internet, using `*99#` USSD and UPI 123Pay (IVR) rails.*
 
@@ -6,20 +6,28 @@
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
-Flowpay tackles a problem millions of people in India hit every day: UPI payments break the moment the internet drops. It puts a clean, smartphone-native UI on top of the offline payment rails — `*99#` USSD and UPI 123Pay — that already ship on every Indian phone but stay buried behind menus almost nobody uses.
+> **Attribution.** This is a fork of
+> [Flowpayup/Payments-Without-Internet](https://github.com/Flowpayup/Payments-Without-Internet),
+> rebranded **Fastpay** and re-owned under the application ID
+> `vijayaapardhu.dev.fastpay`. It is a derivative work of an Apache-2.0 project:
+> the upstream copyright headers, `LICENSE` and `NOTICE` are retained unchanged,
+> as that licence requires. Changes here are the rebrand (package, name, icon,
+> colour scheme), a light/dark theme system, motion, and UI polish.
+
+Fastpay tackles a problem millions of people in India hit every day: UPI payments break the moment the internet drops. It puts a clean, smartphone-native UI on top of the offline payment rails - `*99#` USSD and UPI 123Pay - that already ship on every Indian phone but stay buried behind menus almost nobody uses.
 
 <p align="center">
-  <img src="docs/home.png" alt="Flowpay home screen — offline UPI payments via Scan QR or Pay Contact" width="300">
+  <img src="docs/home.png" alt="Fastpay home screen — offline UPI payments via Scan QR or Pay Contact" width="300">
 </p>
 
 ---
 
 ## What it does
 
-Flowpay wraps the two offline UPI rails that already exist on every Indian smartphone but are buried behind UX so poor that almost nobody uses them:
+Fastpay wraps the two offline UPI rails that already exist on every Indian smartphone but are buried behind UX so poor that almost nobody uses them:
 
-- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the call and gives the user a payment UI to start from.
-- **UPI 123Pay IVR flow** — the call-based payment flow NPCI launched in 2022 for feature phones. Flowpay builds and validates the DTMF payload, places the call, tracks call state throughout, and keeps an on-screen guide in front of the user for the duration.
+- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Fastpay places the call and gives the user a payment UI to start from.
+- **UPI 123Pay IVR flow** — the call-based payment flow NPCI launched in 2022 for feature phones. Fastpay builds and validates the DTMF payload, places the call, tracks call state throughout, and keeps an on-screen guide in front of the user for the duration.
 
 Each entry point uses the rail that fits it:
 
@@ -30,11 +38,11 @@ Each entry point uses the rail that fits it:
 
 `*99#` USSD does not work on Jio. USSD rides the legacy GSM signalling channel, and Jio is an all-IP (VoLTE) network that never carried it — which is precisely the gap NPCI built UPI 123Pay to close.
 
-So Flowpay ships both. Jio users get the full offline payment experience through the 123Pay IVR rail, with nothing removed and no feature compromise; the USSD rail serves the operators where it does work. Using two rails instead of one is what makes "payments without internet" true for every Indian SIM rather than most of them.
+So Fastpay ships both. Jio users get the full offline payment experience through the 123Pay IVR rail, with nothing removed and no feature compromise; the USSD rail serves the operators where it does work. Using two rails instead of one is what makes "payments without internet" true for every Indian SIM rather than most of them.
 
-Both rails work without internet. Both are usable today on any Indian SIM with any UPI-linked bank account. No registration with Flowpay, no server, no account creation.
+Both rails work without internet. Both are usable today on any Indian SIM with any UPI-linked bank account. No registration with Fastpay, no server, no account creation.
 
-**Flowpay uses no accessibility service** — it cannot read your screen or any other app. It never sees your UPI PIN, which is entered directly into your bank's IVR/dialer flow; the app only triggers the dialer and reads bank-confirmation SMS locally on the device.
+**Fastpay uses no accessibility service** — it cannot read your screen or any other app. It never sees your UPI PIN, which is entered directly into your bank's IVR/dialer flow; the app only triggers the dialer and reads bank-confirmation SMS locally on the device.
 
 ## Prerequisites
 
@@ -52,24 +60,24 @@ The official failure metrics — the publicly reported ~0.7–0.8% technical dec
 
 UPI Lite, UPI Lite X, and 123Pay exist on paper as offline rails. In practice, Lite is a wallet (debit-only, no merchant flows for most use cases), Lite X is NFC-only and not meaningfully deployed at consumer scale, and 123Pay's IVR flow is unusable when you're holding a smartphone — nobody listens to voice menus when they could tap a button.
 
-Flowpay brings these existing offline rails together behind a single smartphone-native UI, so paying without internet is something a user can actually do.
+Fastpay brings these existing offline rails together behind a single smartphone-native UI, so paying without internet is something a user can actually do.
 
 ## Engineering notes
 
-Telco-era rails don't give you much to work with. Here's what Flowpay had to solve:
+Telco-era rails don't give you much to work with. Here's what Fastpay had to solve:
 
 **USSD is slow by design.** Each `*99#` interaction is a synchronous menu walk over GSM signalling — round trips take roughly a minute, and the menus aren't built for programmatic traversal, so the flow accounts for telco session timeouts and rate limits.
 
-**123Pay's IVR was built for feature phones.** It expects a user holding a phone to their ear, so Flowpay wraps the dialer hand-off with an on-screen guide to keep the experience coherent on a smartphone.
+**123Pay's IVR was built for feature phones.** It expects a user holding a phone to their ear, so Fastpay wraps the dialer hand-off with an on-screen guide to keep the experience coherent on a smartphone.
 
-**The rails don't expose a clean transaction lifecycle.** Neither flow hands the app a reliable success/failure callback, so Flowpay infers the outcome from the bank's confirmation SMS rather than from call state alone.
+**The rails don't expose a clean transaction lifecycle.** Neither flow hands the app a reliable success/failure callback, so Fastpay infers the outcome from the bank's confirmation SMS rather than from call state alone.
 
 
 ## Reading the code
 
 ```
-app/src/main/java/com/flowpay/app/
-├── FlowpayApplication.kt        # process entry; owns AppContainer
+app/src/main/java/vijayaapardhu/dev/fastpay/
+├── FastpayApplication.kt        # process entry; owns AppContainer
 ├── MainActivity.kt              # home screen (Compose), entry to all payment flows
 ├── SetupActivity.kt             # first-run setup: bank, primary SIM, disclaimer
 ├── TestConfigurationActivity.kt # post-setup connectivity test
@@ -121,11 +129,36 @@ The pieces worth reading if you're poking around:
 - **QR scanning** via ZXing (`com.google.zxing:core`, Apache-2.0) + CameraX
 - No backend, no analytics, no telemetry, no third-party SDKs that talk to the internet
 
+## Design system
+
+`ui/theme/` is the single source of UI truth, and the CI gates enforce it: raw
+`Color(0x…)` outside that package, or hex in a layout, fails the build.
+
+| File | Role |
+| --- | --- |
+| `Color.kt` | The semantic ramp — `DarkFlowpayColors` / `LightFlowpayColors` behind one `FastpayColors` shape, so a screen reads the same in both schemes. The only place raw hex is allowed. |
+| `Theme.kt` | Scheme resolution (`ThemeMode.SYSTEM` / `LIGHT` / `DARK`), the derived Material 3 scheme, and system-bar polarity. |
+| `AccentTheme.kt` | A view over the ramp for the accent alone, kept so existing call sites stay scheme-aware. |
+| `Motion.kt` | Timings and easings in one place, plus the scheme cross-fade. |
+| `Type.kt` | The type scale. |
+| `Shape.kt` | The radius scale. |
+| `TextFieldTokens.kt` | Input colours for both schemes. |
+| `WindowTheme.kt` | Picks the light/dark window theme *before* the first frame, so a theme switch doesn't fade up from black. |
+
+Screens never branch on dark-vs-light; they ask for a role
+(`colors.surface`, `colors.textPrimary`) and get the scheme's value. The theme
+setting is in **Settings → Appearance → Theme**.
+
+Launcher icons are generated from the master logo by
+`tools/generate_logo_assets.py` (adaptive foreground, themed-icon silhouette,
+and the in-app mark) — run it rather than hand-editing the derived assets.
+
 ## Running it
 
 ```bash
-git clone https://github.com/Flowpayup/Payments-Without-Internet.git
-cd Payments-Without-Internet
+# Forked from Flowpayup/Payments-Without-Internet — see the attribution note above.
+git clone <this-fork>.git
+cd payment
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 ./gradlew installDebug
 ```
@@ -138,7 +171,10 @@ If you want to skim the code without running it, the build also works without an
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore, `assembleRelease` stops rather than handing you an unsigned, uninstallable APK — pass `-PallowUnsigned` if that's what you actually want.
 
-**Android app:** we'll be sharing an updated version of Flowpay on [GitHub Releases](https://github.com/Flowpayup/Payments-Without-Internet/releases). In the meantime, you can build from source using the steps above.
+**Android app:** build it yourself using the steps above. Upstream publishes
+releases at
+[Flowpayup/Payments-Without-Internet](https://github.com/Flowpayup/Payments-Without-Internet/releases);
+this fork is not distributing an APK.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards, and [LEGAL.md](LEGAL.md) for the full terms.
 

@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">Flowpay</string>
+    <string name="app_name">Fastpay</string>
     
     <!-- Setup Screen Strings -->
-    <string name="setup_flowpay">Setup Flowpay</string>
+    <string name="setup_fastpay">Setup Fastpay</string>
     <string name="configure_upi_payments">Configure your UPI payments</string>
     <string name="bank_selection">Bank Selection</string>
     <string name="choose_primary_bank">Choose your primary bank for UPI payments</string>
@@ -12,8 +12,8 @@
     <string name="secondary_sim">Secondary SIM</string>
     <string name="complete_setup">Complete Setup</string>
     <string name="disclaimer">Disclaimer</string>
-    <string name="disclaimer_summary">Flowpay never touches your money or your UPI PIN. It only dials your bank\'s *99# / UPI 123 flow for you. Tap to read the full disclaimer.</string>
-    <string name="disclaimer_text">Flowpay is a free, open-source app. It is not a bank, wallet, or payment processor, and it never holds, moves, or has access to your money.\n\nAll Flowpay does is dial for you. It automates your bank\'s *99# / UPI 123 (UPI 123PAY) menu. Every payment is authorised and processed directly by you, your bank, and NPCI over your mobile network, exactly as if you had dialled it yourself. Flowpay is not affiliated with or endorsed by NPCI or any bank.\n\nYour UPI PIN never touches Flowpay. The app does not use Android accessibility services, screen reading, or any form of input capture. You enter your PIN only inside your bank\'s own *99# / IVR flow, where Flowpay cannot see it, intercept it, or store it.\n\nYour data stays on your device. Flowpay reads incoming bank SMS only while a payment is in progress, and only to detect the confirmation. It never uploads your messages, contacts, or transaction history anywhere.\n\nBy continuing, you confirm that you have read and understood this.</string>
+    <string name="disclaimer_summary">Fastpay never touches your money or your UPI PIN. It only dials your bank\'s *99# / UPI 123 flow for you. Tap to read the full disclaimer.</string>
+    <string name="disclaimer_text">Fastpay is a free, open-source app. It is not a bank, wallet, or payment processor, and it never holds, moves, or has access to your money.\n\nAll Fastpay does is dial for you. It automates your bank\'s *99# / UPI 123 (UPI 123PAY) menu. Every payment is authorised and processed directly by you, your bank, and NPCI over your mobile network, exactly as if you had dialled it yourself. Fastpay is not affiliated with or endorsed by NPCI or any bank.\n\nYour UPI PIN never touches Fastpay. The app does not use Android accessibility services, screen reading, or any form of input capture. You enter your PIN only inside your bank\'s own *99# / IVR flow, where Fastpay cannot see it, intercept it, or store it.\n\nYour data stays on your device. Fastpay reads incoming bank SMS only while a payment is in progress, and only to detect the confirmation. It never uploads your messages, contacts, or transaction history anywhere.\n\nBy continuing, you confirm that you have read and understood this.</string>
     
     <!-- Bank Names -->
     
@@ -35,10 +35,10 @@
          release builds are minified, so `e.message` there reads as an
          R8-obfuscated class name. The detail belongs in the adjacent
          Log.e(TAG, "…", e) call, which carries the throwable. -->
-    <string name="error_permissions_denied">Some permissions were denied. Flowpay may not work correctly without them.</string>
-    <string name="error_call_permission_denied">Flowpay needs permission to place the call.</string>
+    <string name="error_permissions_denied">Some permissions were denied. Fastpay may not work correctly without them.</string>
+    <string name="error_call_permission_denied">Fastpay needs permission to place the call.</string>
     <string name="error_call_failed">Could not start the payment call. Please try again.</string>
-    <string name="error_audio_permission">Flowpay needs permission to adjust call audio.</string>
+    <string name="error_audio_permission">Fastpay needs permission to adjust call audio.</string>
     <string name="error_audio_lower_failed">Could not lower the call volume.</string>
     <string name="error_audio_restore_failed">Could not restore the call volume.</string>
     <string name="error_qr_scanner_init">Could not open the QR scanner.</string>
@@ -49,7 +49,7 @@
     <string name="error_enter_phone_and_amount">Enter both a phone number and an amount.</string>
     <string name="error_invalid_phone_number">Enter a valid 10-digit phone number.</string>
     <string name="error_invalid_amount">Enter a valid amount.</string>
-    <string name="error_phone_permission_required">Flowpay needs phone permissions to place the payment call.</string>
+    <string name="error_phone_permission_required">Fastpay needs phone permissions to place the payment call.</string>
     <string name="error_payment_not_started">The payment could not be started. Please try again.</string>
     <string name="error_call_permission_required_ussd">Phone call permission is required to test USSD.</string>
     <string name="error_call_permission_required_payments">Phone call permission is required for USSD payments.</string>
@@ -79,7 +79,7 @@
     <string name="warn_voice_sim_mismatch">Note: this call will use your default calling SIM (%1$s), which doesn\'t look like the %2$s SIM from setup. If the payment fails, switch your default calling SIM.</string>
 
     <!-- Progress and outcome notices from setup and the connectivity test -->
-    <string name="status_requesting_permissions">Requesting the permissions Flowpay needs…</string>
+    <string name="status_requesting_permissions">Requesting the permissions Fastpay needs…</string>
     <string name="status_opening_scanner">Opening the QR scanner…</string>
     <string name="status_permissions_granted_ussd">Permissions granted. You can test USSD now.</string>
     <string name="status_setup_complete">Setup complete.</string>
@@ -110,7 +110,7 @@
     <string name="dialog_failed_title">Transaction Failed</string>
     <string name="dialog_failed_message">Your bank reported the payment as failed. Any debited amount is normally reversed automatically — check your bank if it isn\'t.</string>
     <string name="dialog_awaiting_title">Request Sent</string>
-    <string name="dialog_awaiting_message">Your payment request was sent to the UPI service.\n\nIf your bank calls back, press 1 to confirm and enter your UPI PIN. Flowpay will show the result as soon as your bank\'s confirmation SMS arrives.</string>
+    <string name="dialog_awaiting_message">Your payment request was sent to the UPI service.\n\nIf your bank calls back, press 1 to confirm and enter your UPI PIN. Fastpay will show the result as soon as your bank\'s confirmation SMS arrives.</string>
     <string name="action_ok">OK</string>
     <string name="action_got_it">Got it</string>
     <string name="action_transfer">Transfer</string>
@@ -164,7 +164,7 @@
     <string name="overlay_terminate">Cancel payment</string>
     <string name="overlay_connecting">Connecting to the UPI service…</string>
     <string name="overlay_sending_request">Sending your payment request…</string>
-    <string name="overlay_pin_notice">Flowpay never asks for your UPI PIN. Your bank will call you — enter your PIN on that call.</string>
+    <string name="overlay_pin_notice">Fastpay never asks for your UPI PIN. Your bank will call you — enter your PIN on that call.</string>
     <string name="overlay_request_sent">Request sent. Waiting for your bank\'s confirmation SMS…</string>
     <string name="amount_rupees">₹%1$s</string>
     <string name="percent_format">%1$d%%</string>
@@ -214,6 +214,51 @@
     <!-- Shown on the Scan QR button while the *99# test has not passed, the
          same way Pay Contact reads "Set up UPI 123 IVR" before its test. -->
     <string name="home_setup_ussd">Set up *99#</string>
+
+    <!-- Home screen header and action cards -->
+    <string name="home_tagline">Payments Without Internet</string>
+    <string name="home_connected_bank">Connected bank</string>
+    <string name="home_rails_ready">Ready to pay offline</string>
+    <string name="home_rails_ussd_only">*99# ready</string>
+    <string name="home_rails_ivr_only">123Pay ready</string>
+    <string name="home_rails_neither">Set up a payment rail to begin</string>
+    <string name="home_pay_contact">Pay Contact</string>
+    <string name="home_setup_upi123">Set up UPI 123Pay</string>
+    <string name="home_pay_contact_sub">Pay a saved contact over 123Pay</string>
+    <string name="home_scan_qr_sub">Dial *99# and scan the code</string>
+    <string name="home_pay_contact_sub_locked">Verify 123Pay to unlock</string>
+    <string name="home_scan_qr_sub_locked">Verify *99# to unlock</string>
+    <string name="home_recent_payments">Recent Payments</string>
+    <string name="home_recent_payments_sub">Your latest transactions</string>
+    <string name="home_view_all">View all</string>
+    <string name="home_loading_transactions">Loading transactions</string>
+    <string name="home_transactions_error_title">Could not load transactions</string>
+    <string name="home_no_transactions_title">No transactions yet</string>
+    <string name="home_no_transactions_sub">Your payment history will appear here</string>
+    <string name="action_retry">Retry</string>
+
+    <!-- Pay Contact dialog -->
+    <string name="pay_contact_title">Pay Contact</string>
+    <string name="pay_contact_sending_to">Sending to: %1$s</string>
+    <string name="cd_select_contact">Select contact</string>
+    <string name="error_contacts_unavailable">Unable to open contacts from this screen.</string>
+
+    <!-- Permission explanation dialogs -->
+    <string name="permission_overlay_title">Overlay Permission</string>
+    <string name="permission_overlay_message">Fastpay needs overlay permission to show a payment UI anchor during the call. This keeps your transaction details visible while the call is in progress.</string>
+    <string name="permission_sms_title">SMS Permission</string>
+    <string name="permission_sms_message">Fastpay reads incoming bank SMS only while a payment is in progress, to detect the confirmation. It never reads your inbox and nothing leaves the device.</string>
+    <string name="permission_contacts_title">Contacts Permission</string>
+    <string name="permission_contacts_message">Fastpay needs access to your contacts so you can pick a recipient by name instead of typing their number.</string>
+    <string name="permission_grant">Grant</string>
+
+    <!-- Settings screen: appearance -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_summary">System default follows your phone\'s dark mode setting.</string>
 
     <!-- Setup screen -->
     <string name="setup_step_1_of_2">Step 1 of 2</string>

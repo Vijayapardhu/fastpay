@@ -5,6 +5,17 @@ naming:
     # @Composable functions are PascalCase by convention; don't flag them.
     ignoreAnnotated: ['Composable']
 
+  MatchingDeclarationName:
+    # Color.kt / Theme.kt / Type.kt / Shape.kt are the Android Studio Compose
+    # template filenames, and the file names are what a Compose developer
+    # looks for first — the alternative (FastpayColors.kt, FastpayTheme.kt)
+    # would be less discoverable, not more. The rule's real target is a
+    # misleading name like Foo.kt containing class Bar, which is not the case
+    # here: the primary declaration is named after the concept the file holds.
+    # Same carve-out as MagicNumber below, for the same reason — ui/theme is
+    # the token package, and its layout is conventional.
+    excludes: ['**/ui/theme/**']
+
 style:
   WildcardImport:
     # Compose's layout/material3/runtime/animation packages are DSL surfaces —

@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Adaptive icon 108×108 dp; 12dp inset → 84×84 dp wordmark (large; edges may clip on circular/squircle masks). -->
+<!--
+  Adaptive icon foreground.
+
+  A plain reference rather than an <inset>: the bitmap is already padded to
+  the 72dp safe zone (see tools/generate_logo_assets.py), so wrapping it in
+  another inset would shrink the mark twice - which is exactly what the old
+  ic_launcher_foreground.xml did, with a 12dp inset on top of the wordmark's
+  own margin, leaving the F noticeably undersized.
+-->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:insetLeft="12dp"
-    android:insetTop="12dp"
-    android:insetRight="12dp"
-    android:insetBottom="12dp"
-    android:drawable="@drawable/ic_flowpay_wordmark" />
+    android:drawable="@drawable/ic_fastpay_logo_foreground" />
